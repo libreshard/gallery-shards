@@ -1,0 +1,71 @@
+name: CI
+
+# Every pull request and push to main: every shard is built with LibreShard's own code (a checkout
+# of the app's main branch) and checked the way the app checks a file before installing it.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: libreshard/libreshard
+          ref: main
+          path: libreshard
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: Linux libraries for nut-js
+        run: sudo apt-get update && sudo apt-get install -y libxtst6
+      - name: LibreShard's dependencies
+        working-directory: libreshard
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+        run: npm ci
+      - name: Build
+        run: node tools/build.mjs
+      - name: Panels are in the editor's form and copies of shard-base are current
+        run: |
+          node tools/build.mjs --format --sync-base > /dev/null
+          git diff --exit-code || { echo "::error::Run node tools/build.mjs --format --sync-base and commit the result"; exit 1; }
+
+  dco:
+    name: DCO sign-off
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Every commit has a Signed-off-by line
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          missing=0
+          for c in $(git rev-list --no-merges "$BASE..$HEAD"); do
+            if ! git show -s --format=%B "$c" | grep -q '^Signed-off-by: '; then
+              echo "::error::Commit $(git show -s --format='%h %s' "$c") has no Signed-off-by line (git commit -s)."
+              missing=1
+            fi
+          done
+          exit $missing

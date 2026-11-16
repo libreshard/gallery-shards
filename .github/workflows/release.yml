@@ -1,0 +1,77 @@
+name: Release
+
+# Pushing a tag like office-v1.0.0 builds that shard as a .libreshard file and creates a DRAFT
+# GitHub release with it, its gallery entry and SHA256SUMS.txt. Nothing is public until a
+# maintainer reviews the draft and publishes it.
+on:
+  push:
+    tags: ['*-v*']
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: Build and draft release
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: libreshard/libreshard
+          ref: main
+          path: libreshard
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: Linux libraries for nut-js
+        run: sudo apt-get update && sudo apt-get install -y libxtst6
+      - name: LibreShard's dependencies
+        working-directory: libreshard
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+        run: npm ci
+      - name: The tag names a shard and its version
+        id: tag
+        run: |
+          id="${GITHUB_REF_NAME%-v*}"
+          version="${GITHUB_REF_NAME##*-v}"
+          for f in shard.json manifest.json; do
+            if [ -f "$id/$f" ]; then v="$(node -p "require('./$id/$f').version")"; fi
+          done
+          [ -n "${v:-}" ] || { echo "::error::No shard folder named $id"; exit 1; }
+          [ "$v" = "$version" ] || { echo "::error::Tag $GITHUB_REF_NAME doesn't match $id's version $v"; exit 1; }
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Build
+        env:
+          ID: ${{ steps.tag.outputs.id }}
+        run: node tools/build.mjs --release "$ID"
+      - name: Checksums and notes
+        env:
+          ID: ${{ steps.tag.outputs.id }}
+          VERSION: ${{ steps.tag.outputs.version }}
+        run: |
+          cd out
+          unzip -l "$ID-$VERSION.libreshard"
+          sha256sum -- "$ID-$VERSION.libreshard" > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+          cd ..
+          awk -v v="$VERSION" '$0 ~ "^## \\[" v "\\]" {on=1; next} on && /^## \[/ {exit} on {print}' "$ID/CHANGELOG.md" > notes.md
+          [ -s notes.md ] || echo "See $ID/CHANGELOG.md." > notes.md
+      - name: Create the draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ID: ${{ steps.tag.outputs.id }}
+          VERSION: ${{ steps.tag.outputs.version }}
+        run: |
+          name="$(node -p "require('./out/$ID-$VERSION.json').name")"
+          gh release create "$GITHUB_REF_NAME" "out/$ID-$VERSION.libreshard" "out/$ID-$VERSION.json" out/SHA256SUMS.txt \
+            --repo "$GITHUB_REPOSITORY" --draft --verify-tag \
+            --title "$name $VERSION" --notes-file notes.md
