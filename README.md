@@ -13,7 +13,9 @@ Install them from the app (**Shards → Explore the gallery**) or from each shar
 
 | Shard | For | Kind |
 |---|---|---|
+| [Image editing](edicion-imagen) | Photoshop, Affinity Photo, Krita and GIMP, on Windows and Linux | Code |
 | [SC MFD](sc-mfd) | The space game SC 4.x, on Windows | Code |
+| [Stream Control](obs) | OBS Studio, on Windows and Linux | Code |
 
 Every shard uses the default keyboard shortcuts of its program or game: there's nothing to set up.
 Shards never read the program's state, so a switch on the tablet can show the wrong state if you
