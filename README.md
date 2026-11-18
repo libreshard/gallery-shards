@@ -11,13 +11,15 @@ Install them from the app (**Shards → Explore the gallery**) or from each shar
 
 ## The shards
 
-| Shard | For | Kind |
-|---|---|---|
-| [Image editing](edicion-imagen) | Photoshop, Affinity Photo, Krita and GIMP, on Windows and Linux | Code |
-| [SC MFD](sc-mfd) | The space game SC 4.x, on Windows | Code |
-| [Stream Control](obs) | OBS Studio, on Windows and Linux | Code |
+| Shard | For | Kind | Releases |
+|---|---|---|---|
+| [Image editing](edicion-imagen) | Photoshop, Affinity Photo, Krita and GIMP, on Windows and Linux | Code | [releases](https://github.com/libreshard/gallery-shards/releases?q=%22Image+editing%22&expanded=true) |
+| [SC MFD](sc-mfd) | The space game SC 4.x, on Windows | Code | [releases](https://github.com/libreshard/gallery-shards/releases?q=%22SC+MFD%22&expanded=true) |
+| [Stream Control](obs) | OBS Studio, on Windows and Linux | Code | [releases](https://github.com/libreshard/gallery-shards/releases?q=%22Stream+Control%22&expanded=true) |
 
-Every shard uses the default keyboard shortcuts of its program or game: there's nothing to set up.
+Shards use the default keyboard shortcuts of their program or game, so there's nothing to change
+there. The exception is a program with no default shortcuts, such as OBS Studio: Stream Control
+walks you through giving it its keys, once.
 Shards never read the program's state, so a switch on the tablet can show the wrong state if you
 change it with the keyboard or mouse (see each shard's notes).
 
@@ -68,6 +70,10 @@ Each shard has its own version and releases. Pushing a tag `<id>-v<version>` (fo
 `SHA256SUMS.txt`. The tag must match the version in the shard's `shard.json` or `manifest.json`, and
 its `CHANGELOG.md` needs an entry for it. Once the release is published, the gallery entry goes to
 libreshard/shards in a pull request with a screenshot.
+
+A release is titled with the shard's name and version ("SC MFD 3.2.0"), and the links in the table
+above search for that name. GitHub marks only one release of the whole repository as "Latest", so
+that badge says nothing about the other shards: use each shard's link instead.
 
 ## Contributing
 
