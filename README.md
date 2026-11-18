@@ -13,6 +13,7 @@ Install them from the app (**Shards → Explore the gallery**) or from each shar
 
 | Shard | For | Kind |
 |---|---|---|
+| [SC MFD](sc-mfd) | The space game SC 4.x, on Windows | Code |
 
 Every shard uses the default keyboard shortcuts of its program or game: there's nothing to set up.
 Shards never read the program's state, so a switch on the tablet can show the wrong state if you
