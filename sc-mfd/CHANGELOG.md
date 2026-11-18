@@ -6,6 +6,20 @@ All notable changes are listed here. The format follows
 
 ## [Unreleased]
 
+## [3.2.0] - 2026-11-18
+
+For LibreShard 0.1.0 (0.5.0 to install it from the gallery). Nothing changes on the tablet, and the
+control profile is the same: there's no need to import it again.
+
+### Changed
+
+- The SC MFD now lives with the other shards of the LibreShard project, in
+  [libreshard/gallery-shards](https://github.com/libreshard/gallery-shards/tree/main/sc-mfd), and
+  its author is "LibreShard". If you installed it from the gallery, LibreShard keeps telling you
+  about new versions. If you installed it from a file, install this version once from the gallery
+  (**Shards → Explore the gallery**) to get those notices again: your settings stay.
+- The manifest has its license (Apache-2.0) and the address of its folder, shown on the shard's card.
+
 ## [3.1.0] - 2026-11-13
 
 For LibreShard 0.1.0. The control profile hasn't changed: there's no need to import it again.
@@ -42,6 +56,7 @@ First public release, for LibreShard 0.1.0.
 - All material from the game's official fan kit (maker logos, the wallpaper) and the third-party icon
   pack: they can't be redistributed. The background is now drawn with CSS.
 
-[Unreleased]: https://github.com/libreshard/libreshard-sc-mfd/compare/v3.1.0...HEAD
+[Unreleased]: https://github.com/libreshard/gallery-shards/compare/sc-mfd-v3.2.0...HEAD
+[3.2.0]: https://github.com/libreshard/gallery-shards/releases/tag/sc-mfd-v3.2.0
 [3.1.0]: https://github.com/libreshard/libreshard-sc-mfd/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/libreshard/libreshard-sc-mfd/releases/tag/v3.0.0

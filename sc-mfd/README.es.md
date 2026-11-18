@@ -33,16 +33,18 @@ las pantallas de la cabina.
 
 ## Requisitos
 
-- [LibreShard](https://github.com/libreshard/libreshard) 0.1.0 o posterior, en Windows.
+- [LibreShard](https://github.com/libreshard/libreshard) 0.1.0 o posterior (0.5.0 o posterior para
+  instalarlo desde la galería), en Windows.
 - El juego (4.x) con la **asignación de teclas por defecto**. Los botones pulsan las teclas por
   defecto del juego; si cambiaste las tuyas, edita `layout.js` (ver [Personalizar](#personalizar)).
 
 ## Instalación
 
-1. Descarga `sc-mfd-<versión>.libreshard` desde
-   [Releases](https://github.com/libreshard/libreshard-sc-mfd/releases).
-2. Haz doble clic en él, o arrástralo a la ventana de LibreShard en tu PC.
-3. LibreShard muestra una revisión con todas las teclas que el shard puede pulsar (173). Revísala e
+1. En LibreShard, abre **Shards → Explorar la galería** e instala **SC MFD**. O descarga
+   `sc-mfd-<versión>.libreshard` desde los
+   [releases](https://github.com/libreshard/gallery-shards/releases?q=sc-mfd) de este repositorio y
+   haz doble clic en él, o arrástralo a la ventana de LibreShard en tu PC.
+2. LibreShard muestra una revisión con todas las teclas que el shard puede pulsar (173). Revísala e
    instala.
 
 ### Asignar las acciones que no tienen tecla por defecto
@@ -66,12 +68,13 @@ Todo está en archivos de texto; no hace falta compilar nada para cambiar botone
 - `compact.js`: la cuadrícula del modo minimalista, hecha con botones de `layout.js`.
 - `tools/icons.js`: el juego de iconos.
 
-Después de editar, ejecuta (Node.js 22 o posterior):
+Después de editar, ejecuta desde esta carpeta (Node.js 22 o posterior):
 
 ```bash
 node tools/build-profile.js   # regenera LibreShard_MFD.xml y las teclas del manifest
 node tools/check-compact.js   # comprueba el modo minimalista (con --map dibuja sus cuadrículas)
 node tools/build-icons.js     # regenera icons.css si cambiaste tools/icons.js
+node tools/check.js           # todas las comprobaciones, como las ejecuta la galería
 ```
 
 Para probar los cambios en vivo, usa **Shards → Cargar en desarrollo…** en LibreShard: la tablet
@@ -79,7 +82,9 @@ recarga el shard cada vez que guardas. Si añades teclas, LibreShard te pedirá 
 
 ## Contribuir
 
-Se aceptan issues y pull requests. Los commits deben llevar la firma del
+Se aceptan issues y pull requests en
+[libreshard/gallery-shards](https://github.com/libreshard/gallery-shards) (ver su
+[CONTRIBUTING](../CONTRIBUTING.md)). Los commits deben llevar la firma del
 [Developer Certificate of Origin](https://developercertificate.org/) (`git commit -s`). No añadas
 material del juego ni de su fan kit oficial: sus condiciones no permiten redistribuirlo.
 

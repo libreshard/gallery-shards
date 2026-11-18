@@ -1,9 +1,11 @@
 {
   "id": "sc-mfd",
   "name": "SC MFD",
-  "author": "Gabriel Hernandez",
-  "version": "3.1.0",
+  "author": "LibreShard",
+  "version": "3.2.0",
   "minAppVersion": "0.1.0",
+  "license": "Apache-2.0",
+  "url": "https://github.com/libreshard/gallery-shards/tree/main/sc-mfd",
   "icon": "🚀",
   "description": "Cockpit MFD for SC 4.x: flight, combat, mining, salvage, on foot, social and vehicles",
   "apps": [

@@ -31,16 +31,18 @@ screens.
 
 ## Requirements
 
-- [LibreShard](https://github.com/libreshard/libreshard) 0.1.0 or newer, on Windows.
+- [LibreShard](https://github.com/libreshard/libreshard) 0.1.0 or newer (0.5.0 or newer to install it
+  from the gallery), on Windows.
 - The game (4.x) with its **default keybindings**. The buttons press the game's default keys; if
   you changed yours, edit `layout.js` (see [Customizing](#customizing)).
 
 ## Install
 
-1. Download `sc-mfd-<version>.libreshard` from
-   [Releases](https://github.com/libreshard/libreshard-sc-mfd/releases).
-2. Double-click it, or drag it onto the LibreShard window on your PC.
-3. LibreShard shows a review with every key the shard may press (173). Check it and install.
+1. In LibreShard, open **Shards → Explore the gallery** and install **SC MFD**. Or download
+   `sc-mfd-<version>.libreshard` from this repository's
+   [releases](https://github.com/libreshard/gallery-shards/releases?q=sc-mfd) and double-click it,
+   or drag it onto the LibreShard window on your PC.
+2. LibreShard shows a review with every key the shard may press (173). Check it and install.
 
 ### Bind the actions that have no default key
 
@@ -63,12 +65,13 @@ Everything lives in plain files; no build step is needed to change buttons:
 - `compact.js`: the minimal mode's grid, built from buttons in `layout.js`.
 - `tools/icons.js`: the icon set.
 
-After editing, run (Node.js 22 or newer):
+After editing, run from this folder (Node.js 22 or newer):
 
 ```bash
 node tools/build-profile.js   # regenerates LibreShard_MFD.xml and the manifest's keys
 node tools/check-compact.js   # checks the minimal mode (add --map to draw its grids)
 node tools/build-icons.js     # rebuilds icons.css after changing tools/icons.js
+node tools/check.js           # all the checks, as the gallery's build runs them
 ```
 
 To try your changes live, use **Shards → Load in development…** in LibreShard: the tablet reloads
@@ -76,7 +79,9 @@ on every save. Adding keys makes LibreShard ask you to approve them again.
 
 ## Contributing
 
-Issues and pull requests are welcome. Commits must be signed off (`git commit -s`, the
+Issues and pull requests are welcome in
+[libreshard/gallery-shards](https://github.com/libreshard/gallery-shards) (see its
+[CONTRIBUTING](../CONTRIBUTING.md)). Commits must be signed off (`git commit -s`, the
 [Developer Certificate of Origin](https://developercertificate.org/)). Don't add any material from
 the game or its official fan kit: its terms don't allow redistributing it.
 
