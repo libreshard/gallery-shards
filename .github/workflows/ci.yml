@@ -1,7 +1,8 @@
 name: CI
 
 # Every pull request and push to main: every shard is built with LibreShard's own code (a checkout
-# of the app's main branch) and checked the way the app checks a file before installing it.
+# of the app at the tag in app-version.txt) and checked the way the app checks a file before
+# installing it.
 on:
   push:
     branches: [main]
@@ -22,11 +23,19 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # The whole history: each shard's zip is dated by the last commit that touched its folder
+          fetch-depth: 0
           persist-credentials: false
+      - name: The LibreShard version to build with
+        id: app
+        run: |
+          tag="$(tr -d '[:space:]' < app-version.txt)"
+          [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::app-version.txt must hold a LibreShard tag like v0.5.1"; exit 1; }
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: libreshard/libreshard
-          ref: main
+          ref: ${{ steps.app.outputs.tag }}
           path: libreshard
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0

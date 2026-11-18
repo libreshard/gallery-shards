@@ -1,8 +1,9 @@
 name: Release
 
-# Pushing a tag like office-v1.0.0 builds that shard as a .libreshard file and creates a DRAFT
-# GitHub release with it, its gallery entry and SHA256SUMS.txt. Nothing is public until a
-# maintainer reviews the draft and publishes it.
+# Pushing a tag like office-v1.0.0 builds that shard as a .libreshard file (with the LibreShard
+# version in app-version.txt) and creates a DRAFT GitHub release with it, its gallery entry and
+# SHA256SUMS.txt. Nothing is public until a maintainer reviews the draft and publishes it. The build
+# is reproducible: anyone can rebuild the tag and get the same sha256.
 on:
   push:
     tags: ['*-v*']
@@ -20,11 +21,19 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # The whole history: each shard's zip is dated by the last commit that touched its folder
+          fetch-depth: 0
           persist-credentials: false
+      - name: The LibreShard version to build with
+        id: app
+        run: |
+          tag="$(tr -d '[:space:]' < app-version.txt)"
+          [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::app-version.txt must hold a LibreShard tag like v0.5.1"; exit 1; }
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: libreshard/libreshard
-          ref: main
+          ref: ${{ steps.app.outputs.tag }}
           path: libreshard
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0

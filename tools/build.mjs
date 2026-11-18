@@ -16,18 +16,31 @@
 //   manifest.json             a shard with code: its files are packaged as they are.
 // Each one also has gallery.json ({ "tags": [...] }) and CHANGELOG.md, which aren't packaged.
 //
+// A shard may also have tools/check.js, its own checks (icons, profiles…): it runs first, from the
+// shard's folder, and a non-zero exit stops that shard.
+//
 // For every shard, out/ gets <id>-<version>.libreshard and <id>-<version>.json: the entry for the
 // gallery (libreshard/shards), with the download address of its release here, its sha256 and size.
 // The screenshot is added in the gallery's pull request.
 //
-// Needs a checkout of the LibreShard app with its dependencies installed (npm ci): LIBRESHARD_DIR,
-// or ./libreshard (where CI puts it).
+// Builds are reproducible: the same commit, built with the same LibreShard version and Node major,
+// gives the same bytes and so the same sha256, on any system. Entries are sorted by name and dated
+// by the last commit that touched the shard's folder (in UTC: zip dates have no time zone).
+//
+// Needs a checkout of the LibreShard app at the tag in app-version.txt, with its dependencies
+// installed (npm ci): LIBRESHARD_DIR, or ./libreshard (where CI puts it). Panels carry the app's
+// panel template inside, so that version is part of what gets published; app-version.txt is moved
+// by hand when a new app version comes out.
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
+
+// The zip writer stores each entry's date as local time: the same in UTC everywhere
+process.env.TZ = 'UTC';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ROOT, 'out');
@@ -42,6 +55,8 @@ const VERSION = /^\d+\.\d+\.\d+$/;
 // Files of a code shard that stay in the repository
 const NOT_PACKAGED = new Set(['gallery.json', 'CHANGELOG.md', 'README.md', 'README.es.md', 'tools', 'docs']);
 const SHARED = ['libreshard.css', 'libreshard.js'];
+const APP_TAG = /^v\d+\.\d+\.\d+$/;
+const CHECK_TIMEOUT_MS = 120_000;
 
 const args = process.argv.slice(2);
 const flag = (f) => args.includes(f);
@@ -50,21 +65,44 @@ const only = args.filter((a) => !a.startsWith('--'));
 const lf = (s) => s.replace(/\r\n/g, '\n');
 const readJson = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
 const exists = (dir, f) => fs.existsSync(path.join(dir, f));
+// git's output, or null when it fails (not a repository, unknown revision)
+function git(cwd, ...args) {
+  const r = spawnSync('git', args, { cwd, encoding: 'utf8' });
+  return r.status === 0 ? r.stdout.trim() : null;
+}
+
+// The LibreShard version every shard is built with: a tag like v0.5.1
+function appTag() {
+  const tag = fs.readFileSync(path.join(ROOT, 'app-version.txt'), 'utf8').trim();
+  if (!APP_TAG.test(tag)) throw new Error('app-version.txt must hold a LibreShard tag like v0.5.1');
+  return tag;
+}
 
 function loadApp() {
+  const tag = appTag();
   const dir = path.resolve(process.env.LIBRESHARD_DIR || path.join(ROOT, 'libreshard'));
   if (!fs.existsSync(path.join(dir, 'panel-format.js'))) {
-    throw new Error(`No LibreShard checkout at ${dir}: set LIBRESHARD_DIR (a checkout of libreshard/libreshard with npm ci done)`);
+    throw new Error(`No LibreShard checkout at ${dir}: set LIBRESHARD_DIR (a checkout of libreshard/libreshard at ${tag} with npm ci done)`);
   }
+  const version = readJson(path.join(dir, 'package.json')).version;
+  if (`v${version}` !== tag) throw new Error(`The LibreShard checkout at ${dir} is ${version}, but app-version.txt says ${tag}: git -C "${dir}" switch --detach ${tag}`);
+  // The same version number isn't enough: main keeps it until the next release
+  const head = git(dir, 'rev-parse', 'HEAD');
+  const tagged = git(dir, 'rev-parse', '--verify', '--quiet', `${tag}^{commit}`);
+  const notes = [];
+  if (head === null) notes.push(`${dir} isn't a git checkout: only its version was checked`);
+  else if (tagged === null) throw new Error(`The LibreShard checkout at ${dir} doesn't have the tag ${tag}: git -C "${dir}" fetch --tags`);
+  else if (head !== tagged) throw new Error(`The LibreShard checkout at ${dir} isn't at ${tag}: git -C "${dir}" switch --detach ${tag}`);
   const require = createRequire(path.join(dir, 'package.json'));
   const templateDir = path.join(dir, 'desktop', 'panel-template');
   const template = {};
-  for (const f of fs.readdirSync(templateDir)) template[f] = fs.readFileSync(path.join(templateDir, f), 'utf8');
+  for (const f of fs.readdirSync(templateDir)) template[f] = lf(fs.readFileSync(path.join(templateDir, f), 'utf8'));
   // What every shard with code copies from the app: the authors' template gets the same files
   const base = require('./tools/build-shard-base.js').targets().find((t) => path.basename(t.dir) === 'shard-template').files;
   return {
     dir,
-    version: readJson(path.join(dir, 'package.json')).version,
+    version,
+    notes,
     panel: require('./panel-format.js'),
     zip: require('./zip.js'),
     installer: require('./installer.js'),
@@ -155,6 +193,46 @@ function stageCode(app, dir, name, stage, errors, warnings) {
   return meta;
 }
 
+// The date every entry of a shard's zip gets: the last commit that touched its folder. A folder that
+// isn't committed, or has changes, still builds (with a warning); a release needs a clean commit.
+function shardDate(name, errors, warnings) {
+  const release = flag('--release');
+  if (git(ROOT, 'rev-parse', '--is-shallow-repository') === 'true') {
+    (release ? errors : warnings).push('the repository is a shallow clone, so the date of the last commit can be wrong (CI needs fetch-depth: 0)');
+  }
+  const seconds = git(ROOT, 'log', '-1', '--format=%ct', '--', name);
+  if (!seconds) {
+    (release ? errors : warnings).push('not committed yet: the file is dated now and nobody else can rebuild it');
+    return new Date();
+  }
+  if (git(ROOT, 'status', '--porcelain', '--', name)) {
+    (release ? errors : warnings).push('has uncommitted changes: the file won\'t match a build of the last commit');
+  }
+  return new Date(Number(seconds) * 1000);
+}
+
+// The shard's own checks (tools/check.js), run from its folder with the same LibreShard checkout
+function runCheck(app, dir, errors) {
+  const file = path.join(dir, 'tools', 'check.js');
+  if (!fs.existsSync(file)) return false;
+  const r = spawnSync(process.execPath, [file], {
+    cwd: dir, encoding: 'utf8', timeout: CHECK_TIMEOUT_MS, env: { ...process.env, LIBRESHARD_DIR: app.dir },
+  });
+  if (r.status === 0) return true;
+  const why = r.error ? r.error.message : r.signal ? `stopped (${r.signal})` : `exit code ${r.status}`;
+  errors.push(`tools/check.js failed: ${why}`);
+  const output = `${r.stdout || ''}${r.stderr || ''}`.trim().split('\n').slice(-20);
+  for (const line of output) if (line.trim()) errors.push(`  ${line}`);
+  return false;
+}
+
+// The staged folder as a zip that doesn't depend on the system or the time: names in code-unit
+// order (not the file system's, not the locale's) and one fixed date
+function reproducibleZip(app, stage, date) {
+  const files = app.zip.filesUnder(stage, { hidden: false }).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+  return app.zip.createZip(files.map((rel) => ({ name: rel, data: fs.readFileSync(path.join(stage, rel)) })), { date });
+}
+
 function changelogHas(dir, version) {
   const file = path.join(dir, 'CHANGELOG.md');
   if (!fs.existsSync(file)) return false;
@@ -176,6 +254,10 @@ async function build(app, name) {
     errors.push(`gallery.json: "tags" must be one to three of ${TAGS.join(', ')}`);
   }
 
+  const checked = runCheck(app, dir, errors);
+  if (errors.length) return { errors, warnings };
+  const date = shardDate(name, errors, warnings);
+
   const stage = fs.mkdtempSync(path.join(os.tmpdir(), `gallery-${name}-`));
   try {
     const meta = (panel ? stagePanel : stageCode)(app, dir, name, stage, errors, warnings);
@@ -185,7 +267,7 @@ async function build(app, name) {
     if (errors.length) return { errors, warnings };
 
     const file = `${name}-${meta.version}.libreshard`;
-    const data = app.zip.shardZip(stage);
+    const data = reproducibleZip(app, stage, date);
     fs.mkdirSync(OUT, { recursive: true });
     fs.writeFileSync(path.join(OUT, file), data);
 
@@ -220,6 +302,7 @@ async function build(app, name) {
       if (risk.dangerous.length) notes.push(`system shortcuts: ${risk.dangerous.join(', ')}`);
       if (risk.canType) notes.push('can type text and press Enter');
       if (risk.warning) notes.push('WARNING: system shortcuts and typing together');
+      notes.push(`sha256 ${entry.download.sha256}, dated ${date.toISOString()}${checked ? ', tools/check.js passed' : ''}`);
       return { errors, warnings, file, summary: `${m.version}, ${panel ? 'panel' : 'code'}, ${m.keys.length} keys, ${prepared.size.files} files, ${data.length} bytes`, notes };
     } finally {
       prepared.cleanup?.();
@@ -235,7 +318,8 @@ async function main() {
   const unknown = only.filter((n) => !all.includes(n));
   if (unknown.length) throw new Error(`No shard folder named ${unknown.join(', ')}`);
   const names = only.length ? only : all;
-  console.log(`LibreShard ${app.version} at ${app.dir}`);
+  console.log(`LibreShard ${app.version} at ${app.dir}, Node ${process.versions.node}`);
+  for (const m of app.notes) console.log(`warning: ${m}`);
   let failed = 0;
   for (const name of names) {
     const r = await build(app, name);

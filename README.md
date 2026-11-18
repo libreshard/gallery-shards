@@ -26,19 +26,33 @@ change it with the keyboard or mouse (see each shard's notes).
 - **Shards with code** (`manifest.json`, `index.html`, …) are plain web pages, like the shards that
   come with LibreShard. `libreshard.css` and `libreshard.js` are copies of the app's `shard-base`.
 
-Each folder also has `gallery.json` (the gallery's tags) and `CHANGELOG.md`.
+Each folder also has `gallery.json` (the gallery's tags) and `CHANGELOG.md`. A shard can add its
+own checks in `tools/check.js` (icons, profiles…): the build runs it from the shard's folder first
+and stops that shard if it fails. `tools/`, `docs/`, `README*`, `gallery.json` and `CHANGELOG.md`
+stay in this repository; they aren't packaged.
 
 ## Building
 
 `tools/build.mjs` builds every shard with LibreShard's own code (the panel template, the zip
-writer and the install checks), so it needs a checkout of the app with its dependencies:
+writer and the install checks), so it needs a checkout of the app with its dependencies, at the
+version in `app-version.txt` (panels carry the app's panel template inside):
 
 ```sh
-git clone https://github.com/libreshard/libreshard
+git clone --branch "$(cat app-version.txt)" https://github.com/libreshard/libreshard
 cd libreshard && npm ci && cd ..
-LIBRESHARD_DIR=libreshard node tools/build.mjs          # every shard, into out/
-LIBRESHARD_DIR=libreshard node tools/build.mjs office   # just one
+node tools/build.mjs          # every shard, into out/ (finds ./libreshard, or set LIBRESHARD_DIR)
+node tools/build.mjs office   # just one
 ```
+
+`app-version.txt` moves by hand when a new LibreShard version comes out: then every panel is built
+again with its template.
+
+**Reproducible builds.** The same commit, built with the same LibreShard version, gives the same
+bytes and so the same sha256 on any system: files are added in name order and dated by the last
+commit that touched the shard's folder, in UTC. To check a release, clone this repository with its
+history, check out the tag and build that shard: the sha256 must match its gallery entry and
+`SHA256SUMS.txt`. CI builds with Node 24. A shard that isn't committed, or has changes, still
+builds, with a warning; a release (`--release`) refuses both.
 
 For each shard, `out/` gets the `.libreshard` file and its entry for the gallery
 ([libreshard/shards](https://github.com/libreshard/shards)). `--format` rewrites hand-edited
