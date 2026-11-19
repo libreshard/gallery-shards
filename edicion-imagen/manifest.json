@@ -2,7 +2,7 @@
   "id": "edicion-imagen",
   "name": "Image editing",
   "author": "LibreShard",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "minAppVersion": "0.5.1",
   "icon": "🎨",
   "description": "Tools, brush size, zoom, undo and save for Photoshop, Affinity Photo, Krita or GIMP",
@@ -21,7 +21,9 @@
       "default": "photoshop",
       "label": {
         "en": "Program",
-        "es": "Programa"
+        "es": "Programa",
+        "fr": "Programme",
+        "pt": "Programa"
       },
       "options": [
         {

@@ -2,7 +2,7 @@
   "id": "obs",
   "name": "Stream Control",
   "author": "LibreShard",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "minAppVersion": "0.5.1",
   "icon": "🎬",
   "description": "Record, stream, save replays, mute audio and switch scenes in OBS Studio, with any app in front",
@@ -15,28 +15,36 @@
       "default": "auto",
       "label": {
         "en": "Key set",
-        "es": "Juego de teclas"
+        "es": "Juego de teclas",
+        "fr": "Jeu de touches",
+        "pt": "Conjunto de teclas"
       },
       "options": [
         {
           "value": "auto",
           "label": {
             "en": "Automatic (by system)",
-            "es": "Automático (según el sistema)"
+            "es": "Automático (según el sistema)",
+            "fr": "Automatique (selon le système)",
+            "pt": "Automático (pelo sistema)"
           }
         },
         {
           "value": "windows",
           "label": {
             "en": "Windows (F18…F22, Shift+Alt+F13…F18)",
-            "es": "Windows (F18…F22, Mayús+Alt+F13…F18)"
+            "es": "Windows (F18…F22, Mayús+Alt+F13…F18)",
+            "fr": "Windows (F18…F22, Maj+Alt+F13…F18)",
+            "pt": "Windows (F18…F22, Shift+Alt+F13…F18)"
           }
         },
         {
           "value": "linux",
           "label": {
             "en": "Linux (F7…F11, Shift+Alt+F1…F12)",
-            "es": "Linux (F7…F11, Mayús+Alt+F1…F12)"
+            "es": "Linux (F7…F11, Mayús+Alt+F1…F12)",
+            "fr": "Linux (F7…F11, Maj+Alt+F1…F12)",
+            "pt": "Linux (F7…F11, Shift+Alt+F1…F12)"
           }
         }
       ]
@@ -50,7 +58,9 @@
       "step": 1,
       "label": {
         "en": "Scene buttons",
-        "es": "Botones de escena"
+        "es": "Botones de escena",
+        "fr": "Boutons de scène",
+        "pt": "Botões de cena"
       }
     },
     {
@@ -60,7 +70,9 @@
       "default": "",
       "label": {
         "en": "Scene 1 name",
-        "es": "Nombre de la escena 1"
+        "es": "Nombre de la escena 1",
+        "fr": "Nom de la scène 1",
+        "pt": "Nome da cena 1"
       }
     },
     {
@@ -70,7 +82,9 @@
       "default": "",
       "label": {
         "en": "Scene 2 name",
-        "es": "Nombre de la escena 2"
+        "es": "Nombre de la escena 2",
+        "fr": "Nom de la scène 2",
+        "pt": "Nome da cena 2"
       }
     },
     {
@@ -80,7 +94,9 @@
       "default": "",
       "label": {
         "en": "Scene 3 name",
-        "es": "Nombre de la escena 3"
+        "es": "Nombre de la escena 3",
+        "fr": "Nom de la scène 3",
+        "pt": "Nome da cena 3"
       }
     },
     {
@@ -90,7 +106,9 @@
       "default": "",
       "label": {
         "en": "Scene 4 name",
-        "es": "Nombre de la escena 4"
+        "es": "Nombre de la escena 4",
+        "fr": "Nom de la scène 4",
+        "pt": "Nome da cena 4"
       }
     },
     {
@@ -100,7 +118,9 @@
       "default": "",
       "label": {
         "en": "Scene 5 name",
-        "es": "Nombre de la escena 5"
+        "es": "Nombre de la escena 5",
+        "fr": "Nom de la scène 5",
+        "pt": "Nome da cena 5"
       }
     },
     {
@@ -110,7 +130,9 @@
       "default": "",
       "label": {
         "en": "Scene 6 name",
-        "es": "Nombre de la escena 6"
+        "es": "Nombre de la escena 6",
+        "fr": "Nom de la scène 6",
+        "pt": "Nome da cena 6"
       }
     }
   ],
